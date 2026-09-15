@@ -9,6 +9,7 @@ import BackButton from "@/components/BackButton";
 import StorefrontShell from "@/components/StorefrontShell";
 import Footer from "@/components/Footer";
 import { ADVANCE_PERCENT } from "@/lib/payment";
+import { resizeImageFile } from "@/lib/resizeImage";
 
 const fmt = (n) => `रु ${Number(n).toLocaleString("en-IN")}`;
 const phoneOk = (v) => /^\d{10}$/.test(v.trim());
@@ -71,8 +72,9 @@ export default function CheckoutPage() {
     if (!file) return;
     setUploading(true);
     try {
+      const resized = await resizeImageFile(file);
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", resized);
       fd.append("bucket", "payment-proofs");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const data = await res.json();

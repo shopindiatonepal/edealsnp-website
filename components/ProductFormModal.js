@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { resizeImageFile } from "@/lib/resizeImage";
 
 function genLocalId() {
   return Math.random().toString(36).slice(2, 10);
@@ -44,8 +45,9 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
   }
 
   async function uploadFile(file) {
+    const resized = await resizeImageFile(file);
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", resized);
     fd.append("bucket", "product-images");
     const data = await fetch("/api/upload", { method: "POST", body: fd }).then((r) => r.json());
     return data.url || null;

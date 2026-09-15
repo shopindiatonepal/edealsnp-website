@@ -7,6 +7,7 @@ import OrderStatusUpdater from "./OrderStatusUpdater";
 import StatusTimeline from "./StatusTimeline";
 import { calcDiscount } from "@/lib/discount";
 import { calcPaymentAmounts } from "@/lib/payment";
+import { resizeImageFile } from "@/lib/resizeImage";
 
 const fmt = (n) => `रु ${Number(n).toLocaleString("en-IN")}`;
 
@@ -93,8 +94,9 @@ export default function AdminDashboard() {
     if (!file) return;
     setUploadState((s) => ({ ...s, [key]: { uploading: true, error: "" } }));
     try {
+      const resized = await resizeImageFile(file);
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", resized);
       fd.append("bucket", bucket);
       const up = await fetch("/api/upload", { method: "POST", body: fd }).then((r) => r.json());
       if (up.error) throw new Error(up.error);
@@ -113,6 +115,15 @@ export default function AdminDashboard() {
       return;
     }
     setUploadState((s) => ({ ...s, [key]: { uploading: false, error: "" } }));
+  }
+
+  async function resetSetting(key) {
+    await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [key]: null }),
+    });
+    loadAll();
   }
 
   const settingsFields = [
@@ -271,6 +282,11 @@ export default function AdminDashboard() {
                     {uploadState[f.key]?.uploading ? "Uploading…" : settings[f.key] ? "Replace" : "Upload"}
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => handleSettingUpload(f.key, "site-assets", e)} />
                   </label>
+                  {settings[f.key] && (
+                    <button onClick={() => resetSetting(f.key)} className="block mx-auto text-xs font-semibold text-ink-faint underline mt-1.5">
+                      Reset to default
+                    </button>
+                  )}
                 </div>
                 {uploadState[f.key]?.error && <p className="text-xs text-clay mt-2">{uploadState[f.key].error}</p>}
               </div>
