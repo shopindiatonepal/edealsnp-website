@@ -30,19 +30,31 @@ export default function AccountPage() {
 }
 
 function AuthForm() {
-  const [mode, setMode] = useState("sign_in"); // sign_in | sign_up
+  const [mode, setMode] = useState("sign_in"); // sign_in | sign_up | forgot
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false); // "account created" popup, only shown when confirmation is required
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setMessage("");
     setLoading(true);
-    const { error: err } =
+
+    if (mode === "forgot") {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/account/reset-password`,
+      });
+      setLoading(false);
+      if (err) { setError(err.message); return; }
+      setMessage("Check your email for a password reset link.");
+      return;
+    }
+
+    const { data, error: err } =
       mode === "sign_in"
         ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
         : await supabase.auth.signUp({ email: email.trim(), password });
@@ -51,39 +63,85 @@ function AuthForm() {
       setError(err.message);
       return;
     }
-    if (mode === "sign_up") setMessage("Account created — check your email if confirmation is required, then sign in.");
+    if (mode === "sign_up") {
+      if (data.session) {
+        // Confirmation is off — Supabase already signed them in. AuthContext
+        // picks this up automatically and the page re-renders into
+        // OrderHistory on its own; nothing more to do here.
+      } else {
+        // Confirmation is required — no session yet, so show a clear popup
+        // rather than leaving them looking at the same form with no feedback.
+        setShowSuccess(true);
+      }
+    }
   }
 
   return (
     <div className="max-w-sm mx-auto">
-      <h1 className="text-2xl font-extrabold tracking-tight mb-1">{mode === "sign_in" ? "Sign in" : "Create an account"}</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight mb-1">
+        {mode === "sign_in" ? "Sign in" : mode === "sign_up" ? "Create an account" : "Reset your password"}
+      </h1>
       <p className="text-sm text-ink-soft mb-6">
-        {mode === "sign_in" ? "See your past orders and reorder faster." : "Save your details for faster checkout next time."}
+        {mode === "sign_in" ? "See your past orders and reorder faster." : mode === "sign_up" ? "Save your details for faster checkout next time." : "Enter your email and we'll send you a reset link."}
       </p>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <input
           type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
           placeholder="Email" className="border border-line rounded-sm bg-panel px-3.5 py-3 text-sm focus:outline-none focus:border-moss"
         />
-        <input
-          type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password" className="border border-line rounded-sm bg-panel px-3.5 py-3 text-sm focus:outline-none focus:border-moss"
-        />
+        {mode !== "forgot" && (
+          <input
+            type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password" className="border border-line rounded-sm bg-panel px-3.5 py-3 text-sm focus:outline-none focus:border-moss"
+          />
+        )}
         {error && <p className="text-xs text-clay">{error}</p>}
         {message && <p className="text-xs text-moss">{message}</p>}
         <button disabled={loading} className="bg-ink text-paper font-semibold text-sm py-3.5 rounded-sm hover:bg-moss transition-colors disabled:opacity-60">
-          {loading ? "Please wait…" : mode === "sign_in" ? "Sign in" : "Create account"}
+          {loading ? "Please wait…" : mode === "sign_in" ? "Sign in" : mode === "sign_up" ? "Create account" : "Send reset link"}
         </button>
       </form>
+
+      {mode === "sign_in" && (
+        <button onClick={() => { setMode("forgot"); setError(""); setMessage(""); }} className="text-xs text-ink-soft underline mt-4 block">
+          Forgot password?
+        </button>
+      )}
+
       <button
-        onClick={() => { setMode(mode === "sign_in" ? "sign_up" : "sign_in"); setError(""); setMessage(""); }}
-        className="text-xs text-ink-soft underline mt-4"
+        onClick={() => { setMode(mode === "sign_up" ? "sign_in" : "sign_up"); setError(""); setMessage(""); }}
+        className="text-xs text-ink-soft underline mt-2"
       >
-        {mode === "sign_in" ? "New here? Create an account" : "Already have an account? Sign in"}
+        {mode === "sign_up" ? "Already have an account? Sign in" : "New here? Create an account"}
       </button>
+
+      {mode === "forgot" && (
+        <button onClick={() => { setMode("sign_in"); setError(""); setMessage(""); }} className="text-xs text-ink-soft underline mt-2 block">
+          Back to sign in
+        </button>
+      )}
+
       <p className="text-xs text-ink-faint mt-8">
         An account is required to place an order, so we can keep your order history and let you manage orders here.
       </p>
+
+      {showSuccess && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 p-3" onClick={() => setShowSuccess(false)}>
+          <div className="bg-white rounded-md max-w-xs w-full p-6 text-center" onClick={(e) => e.stopPropagation()}>
+            <div className="w-12 h-12 rounded-full bg-moss text-white flex items-center justify-center mx-auto mb-3">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-9" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+            <h2 className="text-lg font-extrabold mb-1">Account created</h2>
+            <p className="text-sm text-ink-soft mb-5">Check your email to confirm your account, then sign in.</p>
+            <button
+              onClick={() => { setShowSuccess(false); setMode("sign_in"); setPassword(""); }}
+              className="w-full bg-ink text-paper font-semibold text-sm py-3 rounded-full hover:bg-moss transition-colors"
+            >
+              Go to sign in
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
