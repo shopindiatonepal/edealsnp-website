@@ -223,18 +223,20 @@ function OrderHistory() {
                     <span className="text-[11px] font-bold uppercase tracking-wide bg-moss/10 text-moss px-3 py-1 rounded-full">{o.status.replace(/_/g, " ")}</span>
                   </div>
                   <p className="text-xs text-ink-faint mb-3">{new Date(o.created_at).toLocaleDateString()}</p>
-                  <div className="flex items-center gap-2 mb-2">
-                    {o.items.slice(0, 4).map((i, idx) => (
-                      <div key={idx} className="w-9 h-9 rounded-sm bg-panel border border-line overflow-hidden flex-shrink-0">
-                        {i.image_url ? (
-                          <img src={i.image_url} alt="" className="w-full h-full object-contain" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-ink-faint text-[9px]">N/A</div>
-                        )}
-                      </div>
-                    ))}
-                    {o.items.length > 4 && <span className="text-xs text-ink-faint">+{o.items.length - 4}</span>}
-                  </div>
+                  {!expanded && (
+                    <div className="flex items-center gap-2 mb-2">
+                      {o.items.slice(0, 4).map((i, idx) => (
+                        <div key={idx} className="w-9 h-9 rounded-sm bg-panel border border-line overflow-hidden flex-shrink-0">
+                          {i.image_url ? (
+                            <img src={i.image_url} alt="" className="w-full h-full object-contain" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-ink-faint text-[9px]">N/A</div>
+                          )}
+                        </div>
+                      ))}
+                      {o.items.length > 4 && <span className="text-xs text-ink-faint">+{o.items.length - 4}</span>}
+                    </div>
+                  )}
                   <p className="text-sm font-bold">{fmt(o.total)}</p>
                 </button>
 
