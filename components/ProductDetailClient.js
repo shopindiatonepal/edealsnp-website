@@ -7,6 +7,7 @@ import StarRating from "./StarRating";
 export default function ProductDetailClient({ product, reviewCount, avgRating }) {
   const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
   const [selected, setSelected] = useState(null); // null = main product option
+  const [descExpanded, setDescExpanded] = useState(false);
 
   // Each of these falls back to the main product's own value whenever the
   // selected variant doesn't override it (either it's the main option, or
@@ -21,6 +22,7 @@ export default function ProductDetailClient({ product, reviewCount, avgRating })
 
   function handleVariantChange(option) {
     setSelected(option);
+    setDescExpanded(false);
   }
 
   return (
@@ -33,6 +35,7 @@ export default function ProductDetailClient({ product, reviewCount, avgRating })
         />
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint mb-2">{displayCategory}</p>
+          {product.brand && <p className="text-sm font-semibold text-moss mb-1">{product.brand}</p>}
           {/* The product name updates immediately to the selected variant's own
               name — it only shows the plain product name when the main/original
               option is selected. */}
@@ -43,9 +46,16 @@ export default function ProductDetailClient({ product, reviewCount, avgRating })
               <StarRating rating={avgRating} size={14} showNumber count={reviewCount} />
             </div>
           )}
-          <p className={`text-sm leading-relaxed mb-6 ${displayDescription ? "text-ink-soft" : "text-ink-faint italic"}`}>
-            {displayDescription || "No description added yet."}
-          </p>
+          <div className="mb-6">
+            <p className={`text-sm leading-relaxed ${displayDescription ? "text-ink-soft" : "text-ink-faint italic"} ${!descExpanded ? "line-clamp-2" : ""}`}>
+              {displayDescription || "No description added yet."}
+            </p>
+            {displayDescription && displayDescription.length > 110 && (
+              <button onClick={() => setDescExpanded((v) => !v)} className="text-xs font-semibold text-moss underline mt-1">
+                {descExpanded ? "See less" : "See more"}
+              </button>
+            )}
+          </div>
           <ProductActions product={product} onVariantChange={hasVariants ? handleVariantChange : undefined} />
         </div>
       </div>

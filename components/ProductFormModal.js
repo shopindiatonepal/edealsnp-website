@@ -11,12 +11,14 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
     name: product?.name || "",
+    brand: product?.brand || "",
     category: product?.category || "",
     category_id: product?.category_id || "",
     size: product?.size || "",
     price: product?.price ?? "",
     weight_grams: product?.weight_grams ?? 200,
     color: product?.color || "",
+    color_name: product?.color_name || "",
     description: product?.description || "",
     ingredients: product?.ingredients || "",
     expiry_date: product?.expiry_date || "",
@@ -77,7 +79,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
 
   function addVariant() {
     setVariants((v) => [...v, {
-      _localId: genLocalId(), name: "", image_url: "", price: form.price || 0, stock_quantity: 0, weight_grams: "",
+      _localId: genLocalId(), name: "", color: "", color_name: "", image_url: "", price: form.price || 0, stock_quantity: 0, weight_grams: "",
       use_main_details: true, category: "", size: "", description: "", ingredients: "", expiry_date: "",
     }]);
   }
@@ -141,6 +143,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           id: rest.id || _localId,
           name: rest.name,
           color: rest.color || "",
+          color_name: rest.color_name || "",
           image_url: rest.image_url || "",
           price: parseFloat(rest.price) || 0,
           stock_quantity: parseInt(rest.stock_quantity) || 0,
@@ -213,9 +216,16 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
 
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
+            <label className="block text-xs font-bold mb-1.5">Brand (optional)</label>
+            <input value={form.brand} onChange={(e) => update("brand", e.target.value)} placeholder="e.g. L'Oréal Paris" className="w-full border border-line rounded-sm bg-panel px-3 py-2.5 text-sm focus:outline-none focus:border-moss" />
+          </div>
+          <div>
             <label className="block text-xs font-bold mb-1.5">Product name</label>
             <input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="e.g. Jojoba" className="w-full border border-line rounded-sm bg-panel px-3 py-2.5 text-sm focus:outline-none focus:border-moss" />
           </div>
+        </div>
+
+        <div className="mb-3 max-w-sm">
           <div>
             <label className="block text-xs font-bold mb-1.5">Category</label>
             {categories.length > 0 ? (
@@ -252,10 +262,11 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
 
         <div className="mb-3">
           <label className="block text-xs font-bold mb-1.5">Color (optional)</label>
-          <div className="flex items-center gap-1.5 max-w-xs">
+          <div className="flex items-center gap-1.5 max-w-md">
             <input type="color" value={form.color || "#cccccc"} onChange={(e) => update("color", e.target.value)} className="w-9 h-9 border border-line rounded-sm bg-panel p-0.5 flex-shrink-0" />
-            <input value={form.color || ""} onChange={(e) => update("color", e.target.value)} placeholder="#RRGGBB or leave blank" className="flex-1 min-w-0 border border-line rounded-sm bg-panel px-2.5 py-2 text-sm focus:outline-none focus:border-moss" />
+            <input value={form.color_name || ""} onChange={(e) => update("color_name", e.target.value)} placeholder="Color name, e.g. Forest Green" className="flex-1 min-w-0 border border-line rounded-sm bg-panel px-2.5 py-2 text-sm focus:outline-none focus:border-moss" />
           </div>
+          <p className="text-[11px] text-ink-faint mt-1">The picker sets the swatch shown on the site — the name typed here is what customers actually read.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
@@ -328,7 +339,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
                         <label className="block text-[10px] font-bold text-ink-faint mb-1">Color (optional)</label>
                         <div className="flex items-center gap-1.5">
                           <input type="color" value={v.color || "#cccccc"} onChange={(e) => updateVariant(v._localId, "color", e.target.value)} className="w-8 h-8 border border-line rounded-sm bg-panel p-0.5 flex-shrink-0" />
-                          <input value={v.color || ""} onChange={(e) => updateVariant(v._localId, "color", e.target.value)} placeholder="#RRGGBB or leave blank" className="flex-1 min-w-0 border border-line rounded-sm bg-panel px-2 py-2 text-xs focus:outline-none focus:border-moss" />
+                          <input value={v.color_name || ""} onChange={(e) => updateVariant(v._localId, "color_name", e.target.value)} placeholder="Color name, e.g. Ruby Red" className="flex-1 min-w-0 border border-line rounded-sm bg-panel px-2 py-2 text-xs focus:outline-none focus:border-moss" />
                         </div>
                       </div>
                     </div>

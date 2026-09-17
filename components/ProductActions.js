@@ -12,7 +12,8 @@ function buildMainOption(product) {
   return {
     id: null,
     name: product.name,
-    color: "",
+    color: product.color || "",
+    color_name: product.color_name || "",
     image_url: product.image_url,
     price: product.on_sale && product.sale_price != null ? product.sale_price : product.price,
     original_price: product.price,
@@ -78,7 +79,7 @@ export default function ProductActions({ product, onVariantChange }) {
       {hasVariants && (
         <div className="mb-5">
           <p className="text-xs font-bold mb-2">Options</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-1.5">
             {options.map((v) => (
               <button
                 key={v.id || "main"}
@@ -92,6 +93,7 @@ export default function ProductActions({ product, onVariantChange }) {
               </button>
             ))}
           </div>
+          {selected?.color_name && <p className="text-xs text-ink-soft">Color: <span className="font-semibold text-ink">{selected.color_name}</span></p>}
         </div>
       )}
 
